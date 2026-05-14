@@ -53,9 +53,9 @@ const offerData = [
 ];
 
 const reviews = [
-  { text: "Świetna robota! Parkiet był wyjątkowo zaniedbany. Teraz jest jak nowy.", author: "Dominik Salus", city: "Kraków" },
-  { text: "Godni polecenia! Robota dobrze wykonana. Polecam", author: "Magdalena Wójciakul", city: "Kraków" },
-  { text: "Pełen profesjonalizm. Terminowo i rzetelnie. Polecam każdemu.", author: "Tomasz J.", city: "Wieliczka" }
+  { text: "Świetna robota! Parkiet był wyjątkowo zaniedbany i nosił lata użytkowania. Teraz jest jak nowy.", author: "Dominik Salus", city: "Kraków" },
+  { text: "Godni polecenia! Robota dobrze wykonana. Jesteśmy zadowoleni. Polecam", author: "Magdalena Wójciakul", city: "Kraków" },
+  { text: "Pełen profesjonalizm od pierwszej wyceny aż po sam montaż. Terminowo, rzetelnie i z uśmiechem. Polecam każdemu.", author: "Tomasz J.", city: "Wieliczka" }
 ];
 
 const openingHoursSchedule = {
@@ -100,6 +100,7 @@ export default function Home() {
   }, []);
 
   const changeWood = (dir: number) => {
+    if (animating) return;
     setAnimating(true);
     const currentArrayLength = productsData[activeCategory].length;
     setCurrentWoodIdx((prev) => (prev + dir + currentArrayLength) % currentArrayLength);
@@ -107,7 +108,7 @@ export default function Home() {
   };
 
   const handleCategoryChange = (catId: keyof typeof productsData) => {
-    if (catId === activeCategory) return;
+    if (catId === activeCategory || animating) return;
     setAnimating(true);
     setActiveCategory(catId);
     setCurrentWoodIdx(0); 
@@ -140,9 +141,13 @@ export default function Home() {
   const addFromCalculatorToQuote = () => {
     const genericId = materialType === 'parkiet' ? 998 : 999;
     const imgToUse = materialType === 'parkiet' ? productsData.drewno[0].img : productsData.kompozyt[0].img;
+    const readableName = materialType === 'parkiet' ? 'Podłoga Drewniana' : 'Taras Kompozytowy / Drewniany';
+    
     setCart(prev => {
-      if (prev.find(item => item.id === genericId)) return prev.map(item => item.id === genericId ? { ...item, area } : item);
-      return [...prev, { id: genericId, name: `Wycena: ${materialType}`, img: imgToUse, category: materialType, area }];
+      if (prev.find(item => item.id === genericId)) {
+        return prev.map(item => item.id === genericId ? { ...item, area } : item);
+      }
+      return [...prev, { id: genericId, name: `Wycena: ${readableName}`, img: imgToUse, category: materialType, area }];
     });
     setIsCartOpen(true);
   };
@@ -152,23 +157,23 @@ export default function Home() {
 
   const handleSubmitQuote = (e: React.FormEvent) => {
     e.preventDefault();
+    if (phoneInput.length < 9) return;
     setOrderStatus('loading');
     setTimeout(() => { setOrderStatus('success'); setCart([]); setPhoneInput(''); }, 1500);
   };
 
   return (
-    <main className="relative min-h-screen font-sans text-slate-900 overflow-x-hidden wood-grain-bg">
+    <main className="relative min-h-screen font-sans text-slate-900 overflow-x-hidden bg-[#faf8f5]">
       
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,500;1,600&family=Montserrat:wght@400;600;700;900&display=swap');
         .font-montserrat { font-family: 'Montserrat', sans-serif; }
         .font-script { font-family: 'Playfair Display', serif; font-style: italic; }
         
-        /* TŁO: PŁYNNE SŁOJE DREWNA */
-        .wood-grain-bg {
-          background-color: #FcfAf5;
-          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.005 0.1' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='1 0 0 0 0.95 0 1 0 0 0.9 0 0 1 0 0.85 0 0 0 0.15 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-          background-attachment: fixed;
+        .bg-noise {
+          position: fixed; inset: 0;
+          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+          opacity: 0.04; pointer-events: none; z-index: 1;
         }
 
         @keyframes liquidSwap {
@@ -177,47 +182,52 @@ export default function Home() {
           100% { filter: blur(0px); opacity: 1; transform: scale(1); }
         }
         .animate-liquid { animation: liquidSwap 0.4s ease-in-out forwards; }
-        
-        @keyframes floatSlow {
+
+        @keyframes aura1 {
           0% { transform: translate(0, 0) scale(1); }
-          50% { transform: translate(2%, 3%) scale(1.05); }
+          33% { transform: translate(5%, 5%) scale(1.05); }
+          66% { transform: translate(-5%, 2%) scale(0.95); }
           100% { transform: translate(0, 0) scale(1); }
         }
-        .blob-1 {
-          position: absolute; top: -10%; left: -10%; width: 60vw; height: 60vw;
-          background: radial-gradient(circle, rgba(217,119,6,0.08) 0%, rgba(255,255,255,0) 70%);
-          border-radius: 50%; filter: blur(40px); animation: floatSlow 20s infinite ease-in-out alternate; pointer-events: none;
+        @keyframes aura2 {
+          0% { transform: translate(0, 0) scale(1); }
+          33% { transform: translate(-5%, -5%) scale(0.95); }
+          66% { transform: translate(5%, -2%) scale(1.05); }
+          100% { transform: translate(0, 0) scale(1); }
         }
-        .blob-2 {
-          position: absolute; bottom: 10%; right: -10%; width: 50vw; height: 50vw;
-          background: radial-gradient(circle, rgba(146,64,14,0.05) 0%, rgba(255,255,255,0) 70%);
-          border-radius: 50%; filter: blur(40px); animation: floatSlow 15s infinite ease-in-out alternate-reverse; pointer-events: none;
-        }
+        .animate-aura-1 { animation: aura1 15s infinite ease-in-out; }
+        .animate-aura-2 { animation: aura2 20s infinite ease-in-out; }
       `}</style>
 
-      {/* Animowane bloby tła */}
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <div className="blob-1" />
-        <div className="blob-2" />
+      {/* Tło i aury ze starej, dobrej wersji */}
+      <div className="bg-noise" />
+      <div className="fixed inset-0 pointer-events-none z-[0] overflow-hidden">
+        <div className="absolute top-[-20%] left-[-10%] w-[60vw] h-[60vw] bg-amber-200/30 blur-[120px] rounded-full animate-aura-1" />
+        <div className="absolute bottom-[-20%] right-[-10%] w-[70vw] h-[70vw] bg-orange-300/20 blur-[150px] rounded-full animate-aura-2" />
       </div>
 
-      {/* Nawigacja - POPRAWIONY Z-INDEX Z z-40 NA z-[100] */}
-      <nav className={`fixed w-full top-0 z-[100] transition-all duration-300 ${scrolled ? 'bg-white/95 backdrop-blur-md shadow-sm py-4' : 'bg-transparent py-8'}`}>
+      {/* Nawigacja */}
+      <nav className={`fixed w-full top-0 z-[100] transition-all duration-300 ${scrolled ? 'bg-white/90 backdrop-blur-md shadow-sm py-4' : 'bg-transparent py-8'}`}>
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
           <div className="cursor-pointer" onClick={() => scrollToSection('hero')}>
-            <Image src="/logo.png" alt="ASMAR" width={300} height={150} className="h-24 md:h-40 w-auto object-contain transition-transform hover:scale-105" />
+            <Image src="/logo.png" alt="ASMAR" width={300} height={150} className="h-16 md:h-24 w-auto object-contain transition-transform hover:scale-105" />
           </div>
-          <div className="hidden md:flex gap-10 text-[11px] uppercase tracking-[0.2em] font-bold text-slate-600 font-montserrat">
+          <div className="hidden md:flex gap-10 text-[11px] uppercase tracking-[0.2em] font-bold text-slate-600 font-montserrat z-50">
              <button onClick={() => scrollToSection('o-nas')} className="hover:text-amber-700 transition">O nas</button>
              <button onClick={() => scrollToSection('oferta')} className="hover:text-amber-700 transition">Oferta</button>
              <button onClick={() => scrollToSection('wycena')} className="hover:text-amber-700 transition">Wycena</button>
              <button onClick={() => scrollToSection('opinie')} className="hover:text-amber-700 transition">Opinie</button>
              <button onClick={() => scrollToSection('kontakt')} className="hover:text-amber-700 transition">Kontakt</button>
           </div>
-          <button onClick={() => setIsCartOpen(true)} className="relative p-2 text-amber-900 hover:text-amber-700 transition">
-            <ShoppingCart size={28} />
-            {cart.length > 0 && <span className="absolute top-0 right-0 bg-amber-600 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full shadow-md">{cart.length}</span>}
-          </button>
+          <div className="flex items-center gap-4 z-50">
+            <button onClick={() => setIsCartOpen(true)} className="relative p-2 text-slate-800 hover:text-amber-700 transition">
+              <ShoppingCart size={26} />
+              {cart.length > 0 && <span className="absolute top-0 right-0 bg-amber-600 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full shadow-md">{cart.length}</span>}
+            </button>
+            <button className="md:hidden text-slate-800 p-2" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+              {isMobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
+            </button>
+          </div>
         </div>
       </nav>
 
@@ -234,7 +244,7 @@ export default function Home() {
                   <div className="flex-1">
                     <p className="font-bold text-sm">{item.name}</p>
                     <p className="text-[9px] uppercase tracking-widest text-amber-600 font-bold mt-1">{item.category}</p>
-                    <div className="flex items-center gap-2 mt-2"><input type="number" value={item.area} onChange={(e) => updateCartItemArea(item.id, Number(e.target.value))} className="w-16 border rounded p-1 text-center text-xs outline-none focus:border-amber-500" /><span>m²</span></div>
+                    <div className="flex items-center gap-2 mt-2"><input type="number" min="1" value={item.area} onChange={(e) => updateCartItemArea(item.id, Number(e.target.value))} className="w-16 border rounded p-1 text-center text-xs outline-none focus:border-amber-500" /><span>m²</span></div>
                   </div>
                   <button onClick={() => removeCartItem(item.id)} className="text-slate-300 hover:text-red-500"><Trash2 size={20} /></button>
                 </div>
@@ -245,7 +255,7 @@ export default function Home() {
             <div className="p-6 bg-slate-50 border-t">
               <form onSubmit={handleSubmitQuote} className="space-y-4">
                 <input type="tel" required placeholder="Twój numer telefonu" value={phoneInput} onChange={(e) => setPhoneInput(e.target.value)} className="w-full border rounded-xl py-4 px-4 font-montserrat text-sm outline-none focus:border-amber-600" />
-                <button type="submit" className="w-full bg-amber-600 text-white font-bold rounded-xl py-5 text-xs uppercase tracking-widest shadow-lg">Poproś o darmową wycenę</button>
+                <button type="submit" className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl py-5 text-xs uppercase tracking-widest shadow-lg transition-colors">Poproś o darmową wycenę</button>
               </form>
             </div>
           )}
@@ -253,50 +263,59 @@ export default function Home() {
       </div>
 
       {/* Hero */}
-      <section id="hero" className="relative z-10 pt-56 md:pt-72 pb-20 text-center px-6">
-        <p className="text-[10px] tracking-[0.4em] uppercase text-amber-800 font-bold mb-6 font-montserrat">Kraków • Bieżanowska 252a</p>
-        <h1 className="text-5xl md:text-8xl font-montserrat font-bold leading-tight mb-16 text-slate-800 tracking-wider">
+      <section id="hero" className="relative z-10 pt-48 md:pt-56 pb-10 text-center px-6">
+        <p className="text-[10px] tracking-[0.4em] uppercase text-amber-800 font-bold mb-6 font-montserrat drop-shadow-sm">Kraków • Bieżanowska 252a</p>
+        <h1 className="text-5xl md:text-7xl font-montserrat font-bold leading-tight mb-12 drop-shadow-sm text-slate-800 tracking-wider">
           STUDIO PODŁÓG <br /> 
-          <span className="font-script text-5xl md:text-8xl text-amber-900 mt-2 block lowercase tracking-normal">Asmar podłoga z duszą</span>
+          <span className="font-script text-5xl md:text-7xl text-amber-900 mt-2 block lowercase tracking-normal">Asmar podłoga z duszą</span>
         </h1>
 
-        <div className="flex flex-wrap justify-center gap-4 mb-16">
+        {/* PRZYCISKI KATEGORII - z-30 ABY ZAWSZE DZIAŁAŁY */}
+        <div className="flex flex-wrap justify-center gap-3 mb-8 relative z-30">
           {categories.map(cat => (
-            <button key={cat.id} onClick={() => handleCategoryChange(cat.id as keyof typeof productsData)} className={`px-10 py-4 rounded-full text-xs font-bold tracking-widest uppercase transition-all ${activeCategory === cat.id ? 'bg-amber-800 text-white shadow-xl scale-105' : 'bg-white/70 text-slate-600 hover:bg-white border border-transparent hover:border-amber-200'}`}>{cat.label}</button>
+            <button key={cat.id} onClick={() => handleCategoryChange(cat.id as keyof typeof productsData)} className={`px-6 py-2.5 rounded-full text-[10px] md:text-xs font-bold tracking-widest uppercase transition-all duration-300 font-montserrat ${activeCategory === cat.id ? 'bg-amber-800 text-white shadow-lg scale-105' : 'bg-white/60 text-slate-600 hover:bg-white border border-transparent hover:border-amber-200'}`}>{cat.label}</button>
           ))}
         </div>
 
-        <div className="relative max-w-4xl mx-auto flex items-center justify-center gap-4 h-[400px] md:h-[500px]">
-          <button onClick={() => changeWood(-1)} className="p-5 rounded-full bg-white/60 backdrop-blur shadow-xl text-amber-900 hover:bg-white hover:scale-110 transition-all z-20"><ChevronLeft size={32} /></button>
-          <div className="relative w-80 md:w-[500px] h-full flex items-center justify-center z-10">
-            <Image src={currentProduct.img} alt={currentProduct.name} width={600} height={600} priority className={`relative z-10 w-full h-auto object-contain drop-shadow-2xl ${animating ? 'animate-liquid' : ''}`} />
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-3/4 h-10 bg-black/15 blur-[30px] rounded-[100%]" />
+        {/* KONTENER NA ZDJĘCIE - pointer-events-none NA ZEWNĄTRZ ŻEBY NIE BLOKOWAŁ KATEGORII */}
+        <div className="relative max-w-4xl mx-auto flex items-center justify-center gap-2 md:gap-12 h-[300px] md:h-[450px] pointer-events-none">
+          <button onClick={() => changeWood(-1)} className="p-3 md:p-4 rounded-full bg-white/60 backdrop-blur shadow-xl text-amber-900 hover:bg-white hover:scale-110 transition-all z-20 pointer-events-auto"><ChevronLeft size={32} /></button>
+          
+          <div className="relative w-64 md:w-80 h-full flex items-center justify-center z-10 pointer-events-auto">
+            <Image src={currentProduct.img} alt={currentProduct.name} width={500} height={500} priority className={`relative z-10 w-full h-full object-contain drop-shadow-[0_30px_60px_rgba(0,0,0,0.25)] ${animating ? 'animate-liquid' : ''}`} />
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-3/4 h-8 bg-black/20 blur-[20px] rounded-[100%] pointer-events-none" />
           </div>
-          <button onClick={() => changeWood(1)} className="p-5 rounded-full bg-white/60 backdrop-blur shadow-xl text-amber-900 hover:bg-white hover:scale-110 transition-all z-20"><ChevronRight size={32} /></button>
+
+          <button onClick={() => changeWood(1)} className="p-3 md:p-4 rounded-full bg-white/60 backdrop-blur shadow-xl text-amber-900 hover:bg-white hover:scale-110 transition-all z-20 pointer-events-auto"><ChevronRight size={32} /></button>
         </div>
         
-        <div className="mt-16 flex flex-col items-center">
-           <h3 className="text-4xl font-script text-slate-800 mb-10 drop-shadow-sm">{currentProduct.name}</h3>
-           <button onClick={addToQuote} className="bg-amber-900 text-white font-bold text-xs uppercase tracking-[0.2em] px-12 py-6 rounded-full hover:bg-amber-800 transition-all shadow-2xl shadow-amber-900/30 flex items-center gap-4 group">
-             <ShoppingCart size={20} className="group-hover:scale-110 transition-transform" /> Dodaj do wyceny
+        {/* PRZYCISK KOSZYKA Z Z-30 */}
+        <div className="mt-8 md:mt-12 flex flex-col items-center relative z-30">
+           <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold font-montserrat">Aktualnie wyświetlany</p>
+           <h3 className="text-3xl font-script text-slate-800 mb-6 drop-shadow-sm">{currentProduct.name}</h3>
+           
+           <button onClick={addToQuote} className="bg-amber-900 text-white font-montserrat font-bold text-[10px] md:text-xs uppercase tracking-[0.2em] px-8 py-4 rounded-full hover:bg-amber-800 transition-all shadow-xl shadow-amber-900/30 flex items-center gap-3 group">
+             <ShoppingCart size={16} className="group-hover:scale-110 transition-transform" /> Dodaj do wyceny
            </button>
         </div>
       </section>
 
-      {/* O Nas - POWRÓT ZLECEŃ */}
-      <section id="o-nas" className="relative z-10 py-32 px-6 max-w-6xl mx-auto">
-        <div className="text-center mb-24"><h2 className="text-5xl font-montserrat font-bold text-slate-800 mb-4 tracking-widest uppercase">O nas</h2><p className="text-3xl font-script text-amber-700">Rzemiosło przekazywane przez lata</p></div>
+      {/* O Nas */}
+      <section id="o-nas" className="relative z-10 py-24 md:py-32 px-6 max-w-6xl mx-auto">
+        <div className="text-center mb-16 md:mb-24"><h2 className="text-4xl md:text-5xl font-montserrat font-bold text-slate-800 mb-4 tracking-widest uppercase">O nas</h2><p className="text-3xl font-script text-amber-700">Rzemiosło przekazywane przez lata</p></div>
         <div className="grid md:grid-cols-2 gap-12 md:gap-20 items-center">
-           <div className="space-y-6 text-slate-600 leading-relaxed font-light text-xl">
+           <div className="space-y-6 text-slate-600 leading-relaxed font-light text-lg">
               <p>Rzetelnie wykonywane usługi w zakresie montażu i cyklinowania od niemal 3 dekad. Nasza specjalność to nie tylko montaż, ale wydobywanie naturalnego, unikalnego piękna z każdego kawałka drewna.</p>
+              {/* ZWRÓCONY ZAGINIONY AKAPIT */}
+              <p>Specjalizujemy się w kompleksowej obsłudze podłóg z drewna litego i warstwowego oraz winylowych – od doradztwa, przez montaż, aż po renowację. Zadbamy o każdy detal, abyś mógł cieszyć się komfortową przestrzenią bez zbędnego stresu.</p>
            </div>
            <div className="grid grid-cols-2 gap-4 md:gap-8">
-              <div className="bg-white/60 backdrop-blur-md p-8 md:p-12 rounded-[2rem] md:rounded-[3rem] text-center shadow-xl border border-white">
-                 <p className="text-5xl md:text-7xl font-montserrat font-bold text-amber-600 mb-2">29</p>
+              <div className="bg-white/60 backdrop-blur-md p-8 rounded-[2rem] text-center shadow-xl border border-white">
+                 <p className="text-5xl md:text-6xl font-montserrat font-bold text-amber-600 mb-2">29</p>
                  <p className="text-[10px] md:text-xs uppercase tracking-widest text-slate-500 font-bold font-montserrat">Lat doświadczenia</p>
               </div>
-              <div className="bg-white/60 backdrop-blur-md p-8 md:p-12 rounded-[2rem] md:rounded-[3rem] text-center shadow-xl border border-white mt-8 md:mt-12">
-                 <p className="text-5xl md:text-7xl font-montserrat font-bold text-amber-600 mb-2">10k+</p>
+              <div className="bg-white/60 backdrop-blur-md p-8 rounded-[2rem] text-center shadow-xl border border-white mt-8 md:mt-12">
+                 <p className="text-5xl md:text-6xl font-montserrat font-bold text-amber-600 mb-2">10k+</p>
                  <p className="text-[10px] md:text-xs uppercase tracking-widest text-slate-500 font-bold font-montserrat">Zrealizowanych m²</p>
               </div>
            </div>
@@ -304,44 +323,50 @@ export default function Home() {
       </section>
 
       {/* Oferta */}
-      <section id="oferta" className="relative z-10 py-32 px-6 max-w-7xl mx-auto">
-        <div className="text-center mb-20"><h2 className="text-5xl font-montserrat font-bold text-slate-800 mb-4 tracking-widest uppercase">Nasza Oferta</h2></div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+      <section id="oferta" className="relative z-10 py-16 md:py-24 px-6 max-w-7xl mx-auto">
+        <div className="text-center mb-16 md:mb-20"><h2 className="text-4xl md:text-5xl font-montserrat font-bold text-slate-800 mb-4 tracking-widest uppercase">Zakres usług</h2><p className="text-3xl font-script text-amber-700">Naszej firmy</p></div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
           {offerData.map((item, i) => (
-            <div key={i} className="bg-white/80 backdrop-blur-md rounded-[3rem] shadow-xl overflow-hidden border border-white group transition-all hover:shadow-2xl">
-              <div className="h-[400px] relative">
+            <div key={i} className="bg-white/80 backdrop-blur-lg rounded-[2.5rem] shadow-lg overflow-hidden border border-white group transition-all hover:shadow-2xl">
+              <div className="h-[300px] md:h-[400px] relative overflow-hidden">
                 <Image src={item.images[offerIndices[i]]} alt={item.title} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover transition-transform duration-1000 group-hover:scale-110" />
                 <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 flex justify-between opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all">
-                  <button onClick={() => changeOfferImage(i, -1)} className="p-3 rounded-full bg-white/90 shadow-lg hover:bg-amber-50"><ChevronLeft size={24} className="text-amber-900" /></button>
-                  <button onClick={() => changeOfferImage(i, 1)} className="p-3 rounded-full bg-white/90 shadow-lg hover:bg-amber-50"><ChevronRight size={24} className="text-amber-900" /></button>
+                  <button onClick={() => changeOfferImage(i, -1)} className="p-2 md:p-3 rounded-full bg-white/90 shadow-xl hover:bg-amber-50"><ChevronLeft size={24} className="text-amber-900" /></button>
+                  <button onClick={() => changeOfferImage(i, 1)} className="p-2 md:p-3 rounded-full bg-white/90 shadow-xl hover:bg-amber-50"><ChevronRight size={24} className="text-amber-900" /></button>
+                </div>
+                <div className="absolute bottom-6 left-0 right-0 flex justify-center gap-2">
+                  {item.images.map((_, dotIdx) => (
+                    <div key={dotIdx} className={`w-1.5 h-1.5 rounded-full transition-all ${dotIdx === offerIndices[i] ? 'bg-amber-600 w-4 shadow-[0_0_10px_rgba(217,119,6,0.8)]' : 'bg-white/70'}`} />
+                  ))}
                 </div>
               </div>
-              <div className="p-10"><h4 className="text-2xl font-bold mb-2">{item.title}</h4><p className="text-[10px] text-amber-700 font-bold uppercase tracking-widest mb-4">{item.sub}</p><p className="text-sm text-slate-500 leading-relaxed">{item.desc}</p></div>
+              <div className="p-8 md:p-10 flex flex-col h-full"><h4 className="text-xl md:text-2xl font-montserrat font-bold mb-1">{item.title}</h4><p className="text-[10px] tracking-[0.2em] text-amber-700 font-bold uppercase font-montserrat mb-4">{item.sub}</p><p className="text-sm text-slate-500 leading-relaxed">{item.desc}</p></div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Wycena - SMART ASSISTANT POWRACA */}
-      <section id="wycena" className="relative z-10 mx-4 md:mx-6 py-24 bg-[#0f172a] rounded-[3.5rem] text-white shadow-2xl border border-slate-800">
-        <div className="max-w-5xl mx-auto px-6">
-          <div className="text-center mb-16"><h2 className="text-4xl font-bold mb-4 tracking-widest uppercase">Wstępna Wycena</h2><p className="text-2xl font-script text-amber-500">Oblicz zapotrzebowanie na materiał</p></div>
-          <div className="grid md:grid-cols-2 gap-16 items-center">
-            <div className="space-y-10">
-              <div className="flex justify-between items-end"><span className="text-[10px] uppercase font-bold opacity-60 tracking-widest">Powierzchnia</span><span className="text-6xl font-light text-amber-400 font-montserrat">{area} m²</span></div>
-              <input type="range" min="10" max="500" value={area} onChange={(e) => setArea(Number(e.target.value))} className="w-full h-2 bg-slate-700 rounded-full appearance-none cursor-pointer accent-amber-500" />
-              <div className="flex gap-4">{['Parkiet', 'Taras'].map(t => <button key={t} onClick={() => setMaterialType(t.toLowerCase())} className={`flex-1 py-5 rounded-2xl border transition-all text-xs font-bold tracking-widest uppercase ${materialType === t.toLowerCase() ? 'bg-amber-600 border-amber-600 shadow-xl shadow-amber-900/40' : 'border-slate-700 opacity-40 hover:opacity-100'}`}>{t}</button>)}</div>
+      {/* Wycena */}
+      <section id="wycena" className="relative z-10 mx-4 md:mx-6 py-16 md:py-24 bg-[#0f172a] rounded-[2rem] md:rounded-[3.5rem] text-white shadow-2xl border border-slate-800">
+        <div className="max-w-4xl mx-auto px-6">
+          <div className="text-center mb-12 md:mb-16"><h2 className="text-3xl md:text-4xl font-montserrat font-bold text-amber-50 mb-4 tracking-widest uppercase">Wstępna Wycena</h2><p className="text-3xl font-script text-amber-500 opacity-90">Oblicz zapotrzebowanie na materiał</p></div>
+          <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center">
+            <div className="space-y-8 md:space-y-12">
+              <div className="flex justify-between items-end"><span className="text-[10px] uppercase font-bold tracking-widest opacity-60 font-montserrat">Powierzchnia</span><span className="text-5xl md:text-6xl font-light text-amber-400 font-montserrat">{area} m²</span></div>
+              {/* SUWAK ZNOWU DO 1000m */}
+              <input type="range" min="10" max="1000" value={area} onChange={(e) => setArea(Number(e.target.value))} className="w-full h-2 bg-slate-700 rounded-full appearance-none cursor-pointer accent-amber-500" />
+              <div className="flex gap-4">{['Parkiet', 'Taras'].map(t => <button key={t} onClick={() => setMaterialType(t.toLowerCase())} className={`flex-1 py-4 rounded-xl md:rounded-2xl border transition-all text-[10px] uppercase font-bold tracking-widest font-montserrat ${materialType === t.toLowerCase() ? 'bg-amber-600 border-amber-600 shadow-lg shadow-amber-900/40' : 'border-slate-700 opacity-40 hover:opacity-100'}`}>{t}</button>)}</div>
             </div>
             
-            <div className="p-10 bg-white/5 backdrop-blur-xl rounded-[2.5rem] border border-white/10 text-center relative overflow-hidden shadow-2xl">
-              <div className="absolute top-0 right-0 bg-amber-600 text-white px-5 py-2 text-[9px] font-bold tracking-widest uppercase rounded-bl-[2rem] flex items-center gap-2">
+            <div className="p-8 md:p-10 bg-white/5 backdrop-blur-xl rounded-[1.5rem] md:rounded-[2.5rem] border border-white/10 text-center relative overflow-hidden shadow-2xl">
+              <div className="absolute top-0 right-0 bg-amber-600 text-white px-4 py-2 text-[8px] md:text-[9px] font-bold tracking-widest uppercase rounded-bl-[1.5rem] md:rounded-bl-[2rem] flex items-center gap-2">
                 <Sparkles size={12} /> Smart Assistant
               </div>
-              <ShieldCheck className="text-amber-500 mx-auto mb-6 mt-4" size={40} />
-              <p className="text-slate-300 text-base md:text-lg mb-10 leading-relaxed">
-                Dla wpisanej powierzchni {area} m², asystent Asmar Expert sugeruje zakup ok. <span className="text-white font-bold text-xl">{Math.round(area * 1.1)} m²</span> materiału. Pamiętaj o doliczeniu 10% zapasu na tzw. ścinki montażowe.
+              <ShieldCheck className="text-amber-500 mx-auto mb-6 mt-4" size={32} />
+              <p className="text-slate-300 text-base md:text-lg mb-8 leading-relaxed">
+                Dla wpisanej powierzchni {area} m², asystent Asmar Expert sugeruje zakup ok. <span className="text-white font-bold text-xl">{Math.round(area * 1.1)} m²</span> materiału. Zapas ok. 10% jest niezbędny na ścinki montażowe.
               </p>
-              <button onClick={addFromCalculatorToQuote} className="w-full py-5 bg-amber-600 hover:bg-amber-500 transition-colors text-white rounded-2xl font-bold shadow-xl tracking-widest text-sm uppercase">
+              <button onClick={addFromCalculatorToQuote} className="w-full py-4 md:py-5 bg-amber-600 hover:bg-amber-500 transition-colors text-white rounded-xl md:rounded-2xl font-bold shadow-xl tracking-widest text-xs md:text-sm uppercase font-montserrat">
                 POPROŚ O WYCENĘ
               </button>
             </div>
@@ -349,64 +374,66 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Opinie */}
-      <section id="opinie" className="relative z-10 py-32 px-6 max-w-7xl mx-auto">
-        <div className="text-center mb-20"><h2 className="text-5xl font-montserrat font-bold text-slate-800 mb-4 tracking-widest uppercase">Opinie</h2></div>
-        <div className="grid md:grid-cols-3 gap-10">
+      {/* Opinie - ZWRÓCONE GWIAZDKI, I TYTUŁY */}
+      <section id="opinie" className="relative z-10 py-24 md:py-32 px-6 max-w-7xl mx-auto">
+        <div className="text-center mb-16 md:mb-20"><h2 className="text-4xl md:text-5xl font-montserrat font-bold text-slate-800 mb-4 tracking-widest uppercase">Opinie</h2><p className="text-3xl font-script text-amber-700">Co mówią o naszych podłogach</p></div>
+        <div className="grid md:grid-cols-3 gap-8">
            {reviews.map((review, i) => (
-              <div key={i} className="bg-white/70 backdrop-blur-sm border border-white p-12 rounded-[3rem] shadow-xl relative mt-6">
-                 <div className="absolute -top-6 left-10 bg-amber-600 w-14 h-14 flex items-center justify-center rounded-full shadow-lg text-white">
-                    <Quote size={24} fill="currentColor" />
+              <div key={i} className="bg-white/70 backdrop-blur-md border border-white p-10 rounded-[2.5rem] shadow-xl relative mt-4">
+                 <div className="absolute -top-6 left-8 bg-amber-600 w-12 h-12 flex items-center justify-center rounded-full shadow-lg text-white">
+                    <Quote size={20} fill="currentColor" />
                  </div>
                  <div className="flex gap-1 mb-6 text-amber-400 mt-2">
                    <Star size={18} fill="currentColor" /><Star size={18} fill="currentColor" /><Star size={18} fill="currentColor" /><Star size={18} fill="currentColor" /><Star size={18} fill="currentColor" />
                  </div>
-                 <p className="text-slate-700 text-base italic leading-relaxed mb-8">"{review.text}"</p>
-                 <p className="text-xs uppercase font-bold text-slate-800 tracking-widest">{review.author}</p>
-                 <p className="text-[10px] uppercase tracking-widest text-slate-500 mt-1">{review.city}</p>
+                 <p className="text-slate-700 font-normal text-sm md:text-base leading-relaxed mb-8 italic">"{review.text}"</p>
+                 <div>
+                    <p className="text-xs uppercase tracking-widest font-bold text-slate-800 font-montserrat">{review.author}</p>
+                    <p className="text-[10px] uppercase tracking-widest text-slate-400 mt-1 font-montserrat">{review.city}</p>
+                 </div>
               </div>
            ))}
         </div>
       </section>
 
       {/* Kontakt */}
-      <section id="kontakt" className="relative z-10 py-32 px-6 max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
-          <a href="tel:513724860" className="bg-white/60 backdrop-blur-md p-12 rounded-[3rem] shadow-xl border border-white flex flex-col items-center text-center transition-all hover:-translate-y-2 group">
-            <div className="w-20 h-20 bg-white shadow-md rounded-[2rem] flex items-center justify-center mb-6 text-amber-900 group-hover:bg-amber-900 group-hover:text-white transition-colors"><Phone size={32} /></div>
-            <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">Zadzwoń</p>
-            <p className="text-2xl font-bold font-montserrat">513 724 860</p>
+      <section id="kontakt" className="relative z-10 py-20 md:py-32 px-6 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-10">
+          <a href="tel:513724860" className="bg-white/60 backdrop-blur-md border border-white p-8 rounded-[2.5rem] shadow-lg hover:shadow-2xl flex flex-col items-center group text-center transition-all duration-300 hover:-translate-y-2">
+            <div className="w-16 h-16 bg-white shadow-md rounded-2xl flex items-center justify-center mb-6 group-hover:bg-amber-900 group-hover:text-white transition-all duration-500"><Phone size={24} /></div>
+            <p className="text-[10px] uppercase tracking-widest text-slate-500 mb-1 font-bold font-montserrat">Zadzwoń</p>
+            <p className="text-xl md:text-2xl font-montserrat font-bold text-slate-800 group-hover:text-amber-700 transition-colors">513 724 860</p>
           </a>
-          <a href="mailto:biuro@studioasmar.pl" className="bg-white/60 backdrop-blur-md p-12 rounded-[3rem] shadow-xl border border-white flex flex-col items-center text-center transition-all hover:-translate-y-2 group">
-            <div className="w-20 h-20 bg-white shadow-md rounded-[2rem] flex items-center justify-center mb-6 text-amber-900 group-hover:bg-amber-900 group-hover:text-white transition-colors"><Mail size={32} /></div>
-            <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">Napisz do nas</p>
-            <p className="text-lg font-bold font-montserrat">biuro@studioasmar.pl</p>
+          <a href="mailto:biuro@studioasmar.pl" className="bg-white/60 backdrop-blur-md border border-white p-8 rounded-[2.5rem] shadow-lg hover:shadow-2xl flex flex-col items-center group text-center transition-all duration-300 hover:-translate-y-2">
+            <div className="w-16 h-16 bg-white shadow-md rounded-2xl flex items-center justify-center mb-6 group-hover:bg-amber-900 group-hover:text-white transition-all duration-500"><Mail size={24} /></div>
+            <p className="text-[10px] uppercase tracking-widest text-slate-500 mb-1 font-bold font-montserrat">Napisz do nas</p>
+            <p className="text-lg md:text-xl font-montserrat font-bold text-slate-800 group-hover:text-amber-700 transition-colors">biuro@studioasmar.pl</p>
           </a>
-          <div className="bg-white/60 backdrop-blur-md p-12 rounded-[3rem] shadow-xl border border-white flex flex-col items-center text-center relative transition-all hover:-translate-y-2">
-            <div className={`w-20 h-20 bg-white shadow-md rounded-[2rem] flex items-center justify-center mb-6 ${currentStatus.isOpen ? 'text-green-600' : 'text-red-600'}`}><Clock size={32} /></div>
-            <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">Status Studia</p>
-            <p className="text-2xl font-bold mb-2 uppercase font-montserrat">{currentStatus.isOpen ? 'Zapraszamy' : 'Zamknięte'}</p>
-            <button onClick={() => setShowFullHours(!showFullHours)} className="text-[10px] font-bold text-amber-700 underline tracking-widest">Dziś: {currentStatus.todayStr} <Info size={14} className="inline"/></button>
+          <div className="bg-white/60 backdrop-blur-md border border-white p-8 rounded-[2.5rem] shadow-lg flex flex-col items-center text-center relative transition-all duration-300 hover:-translate-y-2">
+            <div className={`w-16 h-16 bg-white shadow-md rounded-2xl flex items-center justify-center mb-6 transition-colors duration-500 ${currentStatus.isOpen ? 'text-green-600' : 'text-red-600'}`}><Clock size={24} /></div>
+            <p className="text-[10px] uppercase tracking-widest text-slate-500 mb-1 font-bold font-montserrat">Status Studia</p>
+            <p className={`text-xl md:text-2xl font-montserrat font-bold mb-2 ${currentStatus.isOpen ? 'text-green-600' : 'text-red-600'}`}>{currentStatus.isOpen ? 'ZAPRASZAMY' : 'ZAMKNIĘTE'}</p>
+            <button onClick={() => setShowFullHours(!showFullHours)} className="text-[10px] font-bold text-amber-700 underline flex items-center gap-2 font-montserrat">Dziś: {currentStatus.todayStr} <Info size={14}/></button>
             {showFullHours && (
-              <div className="absolute top-full mt-6 bg-white shadow-2xl p-8 rounded-[2rem] z-20 border w-64 animate-in fade-in">
+              <div className="absolute top-full mt-6 bg-white shadow-[0_20px_50px_rgba(0,0,0,0.15)] p-6 md:p-8 rounded-[1.5rem] md:rounded-[2rem] z-20 border border-slate-100 w-56 animate-in fade-in slide-in-from-top-3">
                 {Object.entries(openingHoursSchedule).map(([day, time]) => (
-                  <div key={day} className="flex justify-between text-xs py-3 border-b border-slate-100 last:border-0 font-montserrat tracking-wide">
-                    <span className="text-slate-500 uppercase">{day}</span><span className="font-bold text-slate-800">{time}</span>
+                  <div key={day} className="flex justify-between text-xs py-2 border-b border-slate-50 last:border-0 font-medium capitalize font-montserrat">
+                    <span className="text-slate-500">{day}</span><span className="text-slate-900 font-bold">{time}</span>
                   </div>
                 ))}
               </div>
             )}
           </div>
-          <div className="bg-white/60 backdrop-blur-md p-12 rounded-[3rem] shadow-xl border border-white flex flex-col items-center text-center transition-all hover:-translate-y-2 group">
-            <div className="w-20 h-20 bg-white shadow-md rounded-[2rem] flex items-center justify-center mb-6 text-amber-900 group-hover:bg-amber-900 group-hover:text-white transition-colors"><MapPin size={32} /></div>
-            <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">Odwiedź Studio</p>
-            <p className="text-xl font-bold font-montserrat">Bieżanowska 252a <br/><span className="text-sm font-normal text-slate-500">Kraków</span></p>
+          <div className="bg-white/60 backdrop-blur-md border border-white p-8 rounded-[2.5rem] shadow-lg flex flex-col items-center text-center transition-all duration-300 hover:-translate-y-2 group">
+            <div className="w-16 h-16 bg-white shadow-md rounded-2xl flex items-center justify-center mb-6 text-amber-900 group-hover:bg-amber-900 group-hover:text-white transition-colors"><MapPin size={24} /></div>
+            <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-1 font-montserrat">Odwiedź Studio</p>
+            <p className="text-lg md:text-xl font-montserrat font-bold text-slate-800 group-hover:text-amber-700 transition-colors px-2">Bieżanowska 252a<br/><span className="text-sm font-normal text-slate-500">Kraków</span></p>
           </div>
         </div>
       </section>
 
-      <footer className="py-20 text-center relative z-10 opacity-70">
-        <p className="text-[10px] tracking-[0.5em] font-bold text-slate-500">© 2026 STUDIO PODŁÓG ASMAR - KRAKÓW. 29 LAT DOŚWIADCZENIA.</p>
+      <footer className="py-12 md:py-20 border-t border-slate-200/50 text-center relative z-10 bg-transparent">
+        <p className="text-[9px] md:text-[10px] tracking-[0.4em] md:tracking-[0.5em] text-slate-500 uppercase font-bold italic px-4 font-montserrat">© 2026 STUDIO PODŁÓG ASMAR - KRAKÓW. 29 LAT DOŚWIADCZENIA.</p>
       </footer>
     </main>
   );
