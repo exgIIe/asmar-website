@@ -574,8 +574,10 @@ export default function Home() {
             <p className="text-[10px] uppercase tracking-widest text-slate-500 mb-1 font-bold font-montserrat">Status Studia</p>
             <p className={`text-xl md:text-2xl font-montserrat font-bold mb-2 ${currentStatus.isOpen ? 'text-green-600' : 'text-red-600'}`}>{currentStatus.isOpen ? 'ZAPRASZAMY' : 'ZAMKNIĘTE'}</p>
             <button onClick={() => setShowFullHours(!showFullHours)} className="text-[10px] font-bold text-amber-700 underline flex items-center gap-2 font-montserrat">Dziś: {currentStatus.todayStr} <Info size={14}/></button>
+            
+            {/* POPRAWIONY BOX Z GODZINAMI - TERAZ ZAWSZE NA WIERZCHU (z-20) */}
             {showFullHours && (
-              <div className="absolute top-full mt-6 bg-white shadow-[0_20px_50px_rgba(0,0,0,0.15)] p-6 md:p-8 rounded-[1.5rem] md:rounded-[2rem] z-50 border border-slate-100 w-56 animate-in fade-in slide-in-from-top-3">
+              <div className="absolute top-full mt-6 bg-white shadow-[0_20px_50px_rgba(0,0,0,0.15)] p-6 md:p-8 rounded-[1.5rem] md:rounded-[2rem] z-20 border border-slate-100 w-56 animate-in fade-in slide-in-from-top-3">
                 {Object.entries(openingHoursSchedule).map(([day, time]) => (
                   <div key={day} className="flex justify-between text-xs py-2 border-b border-slate-50 last:border-0 font-medium capitalize font-montserrat">
                     <span className="text-slate-500">{day}</span><span className="text-slate-900 font-bold">{time}</span>
@@ -586,7 +588,8 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="relative group rounded-[2rem] md:rounded-[3.5rem] overflow-hidden shadow-2xl h-[400px] md:h-[550px] border-4 md:border-8 border-white/50 backdrop-blur-sm">
+        {/* MAPA GOOGLE - RELATIVE (z-0) */}
+        <div className="relative z-0 group rounded-[2rem] md:rounded-[3.5rem] overflow-hidden shadow-2xl h-[400px] md:h-[550px] border-4 md:border-8 border-white/50 backdrop-blur-sm">
           <iframe 
             src="https://www.google.com/maps/embed?pb=!4v1778676245484!6m8!1m7!1sbsX9IyuQeWmeRcoLvJS92g!2m2!1d50.01809349115207!2d20.03236815723983!3f186.13483552407584!4f0.6188113948697094!5f1.0920404109287976"
             width="100%" height="100%" style={{ border: 0 }} allowFullScreen loading="lazy"
