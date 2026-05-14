@@ -2,8 +2,6 @@ import './globals.css';
 import type { Metadata } from 'next';
 import { Inter, Playfair_Display } from 'next/font/google';
 
-declare module '*.css';
-
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const playfair = Playfair_Display({ subsets: ['latin'], variable: '--font-playfair' });
 
@@ -14,7 +12,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'ASMAR | Studio Podłóg Kraków',
     description: 'Eksperci od podłóg drewnianych, tarasów i schodów. Sprawdź nasze realizacje.',
-    images: ['/image_3.png'], // To się wyświetli przy udostępnianiu linku
+    images: ['/image_3.png'],
   },
 };
 
