@@ -176,12 +176,13 @@ export default function Home() {
           opacity: 0.04; pointer-events: none; z-index: 1;
         }
 
+        /* OPTYMALIZACJA: Usunięto blur z animacji, zostało tylko skalowanie i krycie */
         @keyframes liquidSwap {
-          0% { filter: blur(0px); opacity: 1; transform: scale(1); }
-          50% { filter: blur(8px); opacity: 0.7; transform: scale(0.97); }
-          100% { filter: blur(0px); opacity: 1; transform: scale(1); }
+          0% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.6; transform: scale(0.95); }
+          100% { opacity: 1; transform: scale(1); }
         }
-        .animate-liquid { animation: liquidSwap 0.4s ease-in-out forwards; }
+        .animate-liquid { animation: liquidSwap 0.3s ease-in-out forwards; }
 
         @keyframes aura1 {
           0% { transform: translate(0, 0) scale(1); }
@@ -199,9 +200,9 @@ export default function Home() {
         .animate-aura-2 { animation: aura2 20s infinite ease-in-out; }
       `}</style>
 
-      {/* Tło i aury ze starej, dobrej wersji */}
-      <div className="bg-noise" />
-      <div className="fixed inset-0 pointer-events-none z-[0] overflow-hidden">
+      {/* OPTYMALIZACJA: Tło i aury ukryte na telefonach (hidden md:block) - GIGANTYCZNY SKOK WYDAJNOŚCI */}
+      <div className="hidden md:block bg-noise" />
+      <div className="hidden md:block fixed inset-0 pointer-events-none z-[0] overflow-hidden">
         <div className="absolute top-[-20%] left-[-10%] w-[60vw] h-[60vw] bg-amber-200/30 blur-[120px] rounded-full animate-aura-1" />
         <div className="absolute bottom-[-20%] right-[-10%] w-[70vw] h-[70vw] bg-orange-300/20 blur-[150px] rounded-full animate-aura-2" />
       </div>
@@ -270,14 +271,12 @@ export default function Home() {
           <span className="font-script text-5xl md:text-7xl text-amber-900 mt-2 block lowercase tracking-normal">Asmar podłoga z duszą</span>
         </h1>
 
-        {/* PRZYCISKI KATEGORII - z-30 ABY ZAWSZE DZIAŁAŁY */}
         <div className="flex flex-wrap justify-center gap-3 mb-8 relative z-30">
           {categories.map(cat => (
             <button key={cat.id} onClick={() => handleCategoryChange(cat.id as keyof typeof productsData)} className={`px-6 py-2.5 rounded-full text-[10px] md:text-xs font-bold tracking-widest uppercase transition-all duration-300 font-montserrat ${activeCategory === cat.id ? 'bg-amber-800 text-white shadow-lg scale-105' : 'bg-white/60 text-slate-600 hover:bg-white border border-transparent hover:border-amber-200'}`}>{cat.label}</button>
           ))}
         </div>
 
-        {/* KONTENER NA ZDJĘCIE - pointer-events-none NA ZEWNĄTRZ ŻEBY NIE BLOKOWAŁ KATEGORII */}
         <div className="relative max-w-4xl mx-auto flex items-center justify-center gap-2 md:gap-12 h-[300px] md:h-[450px] pointer-events-none">
           <button onClick={() => changeWood(-1)} className="p-3 md:p-4 rounded-full bg-white/60 backdrop-blur shadow-xl text-amber-900 hover:bg-white hover:scale-110 transition-all z-20 pointer-events-auto"><ChevronLeft size={32} /></button>
           
@@ -289,7 +288,6 @@ export default function Home() {
           <button onClick={() => changeWood(1)} className="p-3 md:p-4 rounded-full bg-white/60 backdrop-blur shadow-xl text-amber-900 hover:bg-white hover:scale-110 transition-all z-20 pointer-events-auto"><ChevronRight size={32} /></button>
         </div>
         
-        {/* PRZYCISK KOSZYKA Z Z-30 */}
         <div className="mt-8 md:mt-12 flex flex-col items-center relative z-30">
            <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold font-montserrat">Aktualnie wyświetlany</p>
            <h3 className="text-3xl font-script text-slate-800 mb-6 drop-shadow-sm">{currentProduct.name}</h3>
@@ -306,7 +304,6 @@ export default function Home() {
         <div className="grid md:grid-cols-2 gap-12 md:gap-20 items-center">
            <div className="space-y-6 text-slate-600 leading-relaxed font-light text-lg">
               <p>Rzetelnie wykonywane usługi w zakresie montażu i cyklinowania od niemal 3 dekad. Nasza specjalność to nie tylko montaż, ale wydobywanie naturalnego, unikalnego piękna z każdego kawałka drewna.</p>
-              {/* ZWRÓCONY ZAGINIONY AKAPIT */}
               <p>Specjalizujemy się w kompleksowej obsłudze podłóg z drewna litego i warstwowego oraz winylowych – od doradztwa, przez montaż, aż po renowację. Zadbamy o każdy detal, abyś mógł cieszyć się komfortową przestrzenią bez zbędnego stresu.</p>
            </div>
            <div className="grid grid-cols-2 gap-4 md:gap-8">
@@ -353,7 +350,6 @@ export default function Home() {
           <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center">
             <div className="space-y-8 md:space-y-12">
               <div className="flex justify-between items-end"><span className="text-[10px] uppercase font-bold tracking-widest opacity-60 font-montserrat">Powierzchnia</span><span className="text-5xl md:text-6xl font-light text-amber-400 font-montserrat">{area} m²</span></div>
-              {/* SUWAK ZNOWU DO 1000m */}
               <input type="range" min="10" max="1000" value={area} onChange={(e) => setArea(Number(e.target.value))} className="w-full h-2 bg-slate-700 rounded-full appearance-none cursor-pointer accent-amber-500" />
               <div className="flex gap-4">{['Parkiet', 'Taras'].map(t => <button key={t} onClick={() => setMaterialType(t.toLowerCase())} className={`flex-1 py-4 rounded-xl md:rounded-2xl border transition-all text-[10px] uppercase font-bold tracking-widest font-montserrat ${materialType === t.toLowerCase() ? 'bg-amber-600 border-amber-600 shadow-lg shadow-amber-900/40' : 'border-slate-700 opacity-40 hover:opacity-100'}`}>{t}</button>)}</div>
             </div>
@@ -374,7 +370,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Opinie - ZWRÓCONE GWIAZDKI, I TYTUŁY */}
+      {/* Opinie */}
       <section id="opinie" className="relative z-10 py-24 md:py-32 px-6 max-w-7xl mx-auto">
         <div className="text-center mb-16 md:mb-20"><h2 className="text-4xl md:text-5xl font-montserrat font-bold text-slate-800 mb-4 tracking-widest uppercase">Opinie</h2><p className="text-3xl font-script text-amber-700">Co mówią o naszych podłogach</p></div>
         <div className="grid md:grid-cols-3 gap-8">
